@@ -61,17 +61,25 @@ func (fm *FileMgr) Append(filename string) *BlockId {
 	fm.mu.Lock()
 	defer fm.mu.Unlock()
 
+	return NewBlockId(filename, fm.Length(filename))
+}
+
+func (fm *FileMgr) Length(filename string) int {
 	file, err := fm.getFile(filename)
 	if err != nil {
 		panic(err)
 	}
 
-	blknum, err := file.Seek(0, io.SeekEnd)
+	bytes, err := file.Seek(0, io.SeekEnd)
 	if err != nil {
 		panic(err)
 	}
+	
+	return int(bytes) / fm.BlockSize()
+}
 
-	return NewBlockId(filename, int(blknum/int64(fm.blocksize)))
+func (fm *FileMgr) BlockSize() int {
+	return fm.blocksize
 }
 
 func (fm *FileMgr) Close() {
