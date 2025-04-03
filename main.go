@@ -1,43 +1,31 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/nfphys/simpledb-go/file"
+	"github.com/nfphys/simpledb-go/log"
 )
 
 func main() {
 	dbDir := "testdb"
-	blocksize := 2048
+	blocksize := 32
 
 	fm := file.NewFileMgr(dbDir, blocksize)
 	defer fm.Close()
 
-	blk1 := file.NewBlockId("testfile", 0)
-	blk2 := file.NewBlockId("testfile", 1)
+	logfile := "logfile"
+	lm := log.NewLogMgr(fm, logfile)
 
-	p1 := file.NewPage(blocksize)
-	p2 := file.NewPage(blocksize)
+	lm.Append([]byte("record1"))
+	lm.Append([]byte("record2"))
+	lm.Append([]byte("record3"))
+	lm.Append([]byte("record4"))
+	lm.Append([]byte("record5"))
 
-	p1.SetString(0, "Hello, world!")
-	p1.SetInt(100, 12345)
-	p2.SetString(0, "Goodbye, world!")
-	p2.SetInt(100, 67890)
-
-	fm.Write(blk1, p1)
-	fm.Write(blk2, p2)
-
-	p3 := file.NewPage(blocksize)
-	p4 := file.NewPage(blocksize)
-
-	fm.Read(blk1, p3)
-	fm.Read(blk2, p4)
-
-	fmt.Println(p3.GetString(0))
-	fmt.Println(p3.GetInt(100))
-	fmt.Println(p4.GetString(0))
-	fmt.Println(p4.GetInt(100))
+	for rec := range lm.Iterator() {
+		println(string(rec))
+	}
 
 	os.RemoveAll("testdb")
 }
