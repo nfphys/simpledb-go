@@ -1,7 +1,6 @@
 package log_test
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -10,50 +9,95 @@ import (
 	"github.com/nfphys/simpledb-go/log"
 )
 
-func TestLogMgr(t *testing.T) {
-	testPath := filepath.Join(os.TempDir(), "testdb")
-	os.RemoveAll(testPath)
-	defer os.RemoveAll(testPath)
+func setup(blocksize int) *file.FileMgr {
+	dbDir := filepath.Join(os.TempDir(), "testdb")
+	os.RemoveAll(dbDir)
+	return file.NewFileMgr(dbDir, blocksize)
+}
 
+func cleanup(fm *file.FileMgr) {
+	fm.Close()
+	os.RemoveAll(filepath.Join(os.TempDir(), "testdb"))
+}
+
+func TestAppend(t *testing.T) {
+	// Given
 	blocksize := 32
-	fm := file.NewFileMgr(testPath, blocksize)
-	defer fm.Close()
+	fm := setup(blocksize)
+	defer cleanup(fm)
 
-	logfile := "logfile"
-	lm := log.NewLogMgr(fm, logfile)
+	lm := log.NewLogMgr(fm, "logfile")
 
-	if lsn := lm.Append([]byte("record1")); lsn != 1 {
-		t.Errorf("Expected 1, got %d", lsn)
+	// When
+	lsn1 := lm.Append([]byte("record1"))
+	lsn2 := lm.Append([]byte("record2"))
+	lsn3 := lm.Append([]byte("record3"))
+	lm.Flush(lsn3)
+
+	// Then
+	blk1 := file.NewBlockId("logfile", 0)
+	blk2 := file.NewBlockId("logfile", 1)
+	p1 := file.NewPage(blocksize)
+	p2 := file.NewPage(blocksize)
+	fm.Read(blk1, p1)
+	fm.Read(blk2, p2)
+
+	if lsn1 != 1 {
+		t.Errorf("Expected 1, got %d", lsn1)
 	}
-	if lsn := lm.Append([]byte("record2")); lsn != 2 {
-		t.Errorf("Expected 2, got %d", lsn)
+	if lsn2 != 2 {
+		t.Errorf("Expected 2, got %d", lsn2)
 	}
-	if lsn := lm.Append([]byte("record3")); lsn != 3 {
-		t.Errorf("Expected 3, got %d", lsn)
+	if lsn3 != 3 {
+		t.Errorf("Expected 3, got %d", lsn3)
 	}
-	if lsn := lm.Append([]byte("record4")); lsn != 4 {
-		t.Errorf("Expected 4, got %d", lsn)
+	if p1.GetInt(0) != blocksize - (7 + 4) * 2 {
+		t.Errorf("Expected boundary %d, got %d", blocksize - (7 + 4) * 3, p1.GetInt(0))
+	}
+	if p2.GetInt(0) != blocksize - (7 + 4) * 1 {
+		t.Errorf("Expected boundary %d, got %d", blocksize - (7 + 4) * 2, p2.GetInt(0))
+	}
+	if p1.GetString(blocksize - (7 + 4) * 1) != "record1" {
+		t.Errorf("Expected 'record1', got '%s'", p1.GetString(blocksize - (7 + 4) * 1))
+	}
+	if p1.GetString(blocksize - (7 + 4) * 2) != "record2" {
+		t.Errorf("Expected 'record2', got '%s'", p1.GetString(blocksize - (7 + 4) * 2))
+	}
+	if p2.GetString(blocksize - (7 + 4) * 1) != "record3" {
+		t.Errorf("Expected 'record3', got '%s'", p2.GetString(blocksize - (7 + 4) * 1))
+	}
+}
+
+func TestIterator(t *testing.T) {
+	// Given
+	blocksize := 32
+	fm := setup(blocksize)
+	defer cleanup(fm)
+
+	lm := log.NewLogMgr(fm, "logfile")
+
+	lm.Append([]byte("record1"))
+	lm.Append([]byte("record2"))
+	lm.Append([]byte("record3"))
+	lm.Flush(3)
+
+	// When
+	logs := []string{}
+	for rec := range lm.Iterator() {
+		logs = append(logs, string(rec))
 	}
 
-	lm2 := log.NewLogMgr(fm, logfile)
-	num := 2
-	for rec := range lm2.Iterator() {
-		expected := fmt.Sprintf("record%d", num)
-		if string(rec) != expected {
-			t.Errorf("Expected %s, got %s", expected, string(rec))
-		}
-		num--
+	// Then
+	if len(logs) != 3 {
+		t.Errorf("Expected 3 records, got %d", len(logs))
 	}
-
-	lm.Flush(4)
-
-	lm3 := log.NewLogMgr(fm, logfile)
-	num = 4
-	for rec := range lm3.Iterator() {
-		expected := fmt.Sprintf("record%d", num)
-		if string(rec) != expected {
-			t.Errorf("Expected %s, got %s", expected, string(rec))
-		}
-		num--
+	if logs[0] != "record3" {
+		t.Errorf("Expected 'record3', got '%s'", logs[0])
+	}
+	if logs[1] != "record2" {
+		t.Errorf("Expected 'record2', got '%s'", logs[1])
+	}
+	if logs[2] != "record1" {
+		t.Errorf("Expected 'record1', got '%s'", logs[2])
 	}
 }
