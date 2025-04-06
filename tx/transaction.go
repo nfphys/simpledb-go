@@ -6,6 +6,7 @@ import (
 	"github.com/nfphys/simpledb-go/buffer"
 	"github.com/nfphys/simpledb-go/file"
 	"github.com/nfphys/simpledb-go/log"
+	"github.com/nfphys/simpledb-go/tx/recovery"
 )
 
 var (
@@ -19,6 +20,7 @@ type Transaction struct {
 	bm *buffer.BufferMgr
 	txnum int
 	mybuffers *BufferList
+	rm *recovery.RecoveryMgr
 }
 
 func NewTransaction(fm *file.FileMgr, lm *log.LogMgr, bm *buffer.BufferMgr) *Transaction {
@@ -28,27 +30,39 @@ func NewTransaction(fm *file.FileMgr, lm *log.LogMgr, bm *buffer.BufferMgr) *Tra
 	txnum := nextTxNum
 	nextTxNum++
 
-	return &Transaction{
+	tx := &Transaction{
 		fm: fm,
 		lm: lm,
 		bm: bm,
 		txnum: txnum,
 		mybuffers: NewBufferList(bm),
 	}
+
+	rm := recovery.NewRecoveryMgr(tx, lm, bm)
+	tx.rm = rm
+
+	return tx
+}
+
+func (tx *Transaction) TxNumber() int {
+	return tx.txnum
 }
 
 func (tx *Transaction) Commit() {
-	// TODO: implement recovery and concurrency control
+	// TODO: implement concurrency control
+	tx.rm.Commit()
 	tx.mybuffers.UnpinAll()
 }
 
 func (tx *Transaction) Rollback() {
-	// TODO: implement recovery and concurrency control
+	// TODO: implement concurrency control
+	tx.rm.Rollback()
 	tx.mybuffers.UnpinAll()
 }
 
 func (tx *Transaction) Recover() {
-	// TODO: implement recovery
+	tx.bm.FlushAll(tx.txnum)
+	tx.rm.Recover()
 }
 
 func (tx *Transaction) Pin(blk *file.BlockId) error {
@@ -74,17 +88,29 @@ func (tx *Transaction) GetString(blk *file.BlockId, offset int) string {
 }
 
 func (tx *Transaction) SetInt(blk *file.BlockId, offset int, val int, okToLog bool) {
-	// TODO: implement recovery and concurrency control
+	// TODO: implement concurrency control
 	buffer := tx.mybuffers.GetBuffer(blk)
+
+	lsn := -1
+	if (okToLog) {
+		lsn = tx.rm.SetInt(buffer, offset, val)
+	}
+
 	buffer.Contents().SetInt(offset, val)
-	buffer.SetModified(tx.txnum, -1)
+	buffer.SetModified(tx.txnum, lsn)
 }
 
 func (tx *Transaction) SetString(blk *file.BlockId, offset int, val string, okToLog bool) {
-	// TODO: implement recovery and concurrency control
+	// TODO: implement concurrency control
 	buffer := tx.mybuffers.GetBuffer(blk)
+
+	lsn := -1
+	if (okToLog) {
+		lsn = tx.rm.SetString(buffer, offset, val)
+	}
+
 	buffer.Contents().SetString(offset, val)
-	buffer.SetModified(tx.txnum, -1)
+	buffer.SetModified(tx.txnum, lsn)
 }
 
 func (tx *Transaction) AvailableBuffs() int {
