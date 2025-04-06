@@ -5,7 +5,6 @@ import (
 
 	"github.com/nfphys/simpledb-go/file"
 	"github.com/nfphys/simpledb-go/log"
-	"github.com/nfphys/simpledb-go/tx"
 )
 
 type SetStringRecord struct {
@@ -48,7 +47,7 @@ func (sir *SetStringRecord) TxNumber() int {
 	return sir.txnum
 }
 
-func (sir *SetStringRecord) Undo(tx *tx.Transaction) {
+func (sir *SetStringRecord) Undo(tx Transaction) {
 	tx.Pin(sir.blk)
 	tx.SetString(sir.blk, sir.offset, sir.val, false)
 	tx.Unpin(sir.blk)

@@ -5,7 +5,6 @@ import (
 
 	"github.com/nfphys/simpledb-go/file"
 	"github.com/nfphys/simpledb-go/log"
-	"github.com/nfphys/simpledb-go/tx"
 )
 
 type RollbackRecord struct {
@@ -26,7 +25,7 @@ func (rr *RollbackRecord) TxNumber() int {
 	return rr.txnum
 }
 
-func (rr *RollbackRecord) Undo(tx *tx.Transaction) {
+func (rr *RollbackRecord) Undo(tx Transaction) {
 	// No undo operation for ROLLBACK record
 }
 

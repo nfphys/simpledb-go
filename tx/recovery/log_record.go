@@ -2,7 +2,6 @@ package recovery
 
 import (
 	"github.com/nfphys/simpledb-go/file"
-	"github.com/nfphys/simpledb-go/tx"
 )
 
 const (
@@ -17,7 +16,7 @@ const (
 type LogRecord interface {
 	Op() int
 	TxNumber() int
-	Undo(tx *tx.Transaction)
+	Undo(tx Transaction)
 	ToString() string
 }
 

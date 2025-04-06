@@ -5,7 +5,6 @@ import (
 
 	"github.com/nfphys/simpledb-go/file"
 	"github.com/nfphys/simpledb-go/log"
-	"github.com/nfphys/simpledb-go/tx"
 )
 
 type CommitRecord struct {
@@ -26,7 +25,7 @@ func (cr *CommitRecord) TxNumber() int {
 	return cr.txnum
 }
 
-func (cr *CommitRecord) Undo(tx *tx.Transaction) {
+func (cr *CommitRecord) Undo(tx Transaction) {
 	// No undo operation for COMMIT record
 }
 

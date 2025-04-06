@@ -5,7 +5,6 @@ import (
 
 	"github.com/nfphys/simpledb-go/file"
 	"github.com/nfphys/simpledb-go/log"
-	"github.com/nfphys/simpledb-go/tx"
 )
 
 type StartRecord struct {
@@ -26,7 +25,7 @@ func (sr *StartRecord) TxNumber() int {
 	return sr.txnum
 }
 
-func (sr *StartRecord) Undo(tx *tx.Transaction) {
+func (sr *StartRecord) Undo(tx Transaction) {
 	// No undo operation for START record
 }
 
