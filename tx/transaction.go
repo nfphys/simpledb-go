@@ -90,21 +90,3 @@ func (tx *Transaction) setStringWithoutLog(blk *file.BlockId, offset int, val st
 	buffer.Contents().SetString(offset, val)
 	buffer.SetModified()
 }
-
-func (tx *Transaction) AvailableBuffs() int {
-	return tx.bm.Available()
-}
-
-func (tx *Transaction) Size(filename string) int {
-	// TODO: implement concurrency control
-	return tx.fm.Length(filename)
-}
-
-func (tx *Transaction) Append(filename string) *file.BlockId {
-	// TODO: implement concurrency control
-	return tx.fm.Append(filename)
-}
-
-func (tx *Transaction) BlockSize() int {
-	return tx.fm.BlockSize()
-}
