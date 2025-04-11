@@ -30,7 +30,7 @@ func (cr *CheckpointRecord) ToString() string {
 	return fmt.Sprintf("<CHECKPOINT %d>", cr.TxNumber())
 }
 
-func WriteCheckpointRecordToLog(lm *log.LogMgr, txnum int) int {
+func WriteCheckpointRecordToLog(lm *log.LogMgr) int {
 	rec := make([]byte, 4)
 	p := file.NewPageFromBytes(rec)
 	p.SetInt(0, CHECKPOINT)

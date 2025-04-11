@@ -56,3 +56,9 @@ func (bl *BufferList) UnpinAll() {
 	bl.buffers = make(map[file.BlockId]*buffer.Buffer)
 	bl.pins = make(map[file.BlockId]int)
 }
+
+func (bl *BufferList) FlushAll() {
+	for _, buff := range bl.buffers {
+		buff.Flush()
+	}
+}
