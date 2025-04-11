@@ -47,10 +47,6 @@ func (tx *Transaction) Rollback() {
 	tx.mybuffers.UnpinAll()
 }
 
-func (tx *Transaction) Recover() {
-	// TODO: implement recovery
-}
-
 func (tx *Transaction) Pin(blk *file.BlockId) error {
 	return tx.mybuffers.Pin(blk)
 }
@@ -73,15 +69,23 @@ func (tx *Transaction) GetString(blk *file.BlockId, offset int) string {
 	return buffer.Contents().GetString(offset)
 }
 
-func (tx *Transaction) SetInt(blk *file.BlockId, offset int, val int, okToLog bool) {
+func (tx *Transaction) SetInt(blk *file.BlockId, offset int, val int) {
 	// TODO: implement recovery and concurrency control
+	tx.setIntWithoutLog(blk, offset, val)
+}
+
+func (tx *Transaction) SetString(blk *file.BlockId, offset int, val string) {
+	// TODO: implement recovery and concurrency control
+	tx.setStringWithoutLog(blk, offset, val)
+}
+
+func (tx *Transaction) setIntWithoutLog(blk *file.BlockId, offset int, val int) {
 	buffer := tx.mybuffers.GetBuffer(blk)
 	buffer.Contents().SetInt(offset, val)
 	buffer.SetModified()
 }
 
-func (tx *Transaction) SetString(blk *file.BlockId, offset int, val string, okToLog bool) {
-	// TODO: implement recovery and concurrency control
+func (tx *Transaction) setStringWithoutLog(blk *file.BlockId, offset int, val string) {
 	buffer := tx.mybuffers.GetBuffer(blk)
 	buffer.Contents().SetString(offset, val)
 	buffer.SetModified()

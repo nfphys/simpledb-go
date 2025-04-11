@@ -40,7 +40,7 @@ func TestPinAndSetInt(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
-	tx.SetInt(blk, 0, 42, false)
+	tx.SetInt(blk, 0, 42)
 
 	// Then
 	i := tx.GetInt(blk, 0)
@@ -67,7 +67,7 @@ func TestPinAndSetString(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
-	tx.SetString(blk, 0, "hello", false)
+	tx.SetString(blk, 0, "hello")
 
 	// Then
 	s := tx.GetString(blk, 0)
