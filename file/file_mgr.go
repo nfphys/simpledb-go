@@ -37,11 +37,8 @@ func (fm *FileMgr) Read(blk *BlockId, p *Page) {
 		panic(err)
 	}
 
-	b := make([]byte, fm.blocksize)
 	file.Seek(int64(blk.Number()*fm.blocksize), io.SeekStart)
-	file.Read(b)
-
-	copy(p.contents(), b)
+	file.Read(p.contents())
 }
 
 func (fm *FileMgr) Write(blk *BlockId, p *Page) {
