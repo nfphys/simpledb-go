@@ -51,20 +51,20 @@ func TestAppend(t *testing.T) {
 	if lsn3 != 3 {
 		t.Errorf("Expected 3, got %d", lsn3)
 	}
-	if p1.GetInt(0) != blocksize - (7 + 4) * 2 {
-		t.Errorf("Expected boundary %d, got %d", blocksize - (7 + 4) * 3, p1.GetInt(0))
+	if p1.GetInt(0) != 10 {
+		t.Errorf("Expected boundary %d, got %d", 10, p1.GetInt(0))
 	}
-	if p2.GetInt(0) != blocksize - (7 + 4) * 1 {
-		t.Errorf("Expected boundary %d, got %d", blocksize - (7 + 4) * 2, p2.GetInt(0))
+	if p2.GetInt(0) != 21 {
+		t.Errorf("Expected boundary %d, got %d", 21, p2.GetInt(0))
 	}
-	if p1.GetString(blocksize - (7 + 4) * 1) != "record1" {
-		t.Errorf("Expected 'record1', got '%s'", p1.GetString(blocksize - (7 + 4) * 1))
+	if p1.GetString(21) != "record1" {
+		t.Errorf("Expected 'record1', got '%s'", p1.GetString(21))
 	}
-	if p1.GetString(blocksize - (7 + 4) * 2) != "record2" {
-		t.Errorf("Expected 'record2', got '%s'", p1.GetString(blocksize - (7 + 4) * 2))
+	if p1.GetString(10) != "record2" {
+		t.Errorf("Expected 'record2', got '%s'", p1.GetString(10))
 	}
-	if p2.GetString(blocksize - (7 + 4) * 1) != "record3" {
-		t.Errorf("Expected 'record3', got '%s'", p2.GetString(blocksize - (7 + 4) * 1))
+	if p2.GetString(21) != "record3" {
+		t.Errorf("Expected 'record3', got '%s'", p2.GetString(21))
 	}
 }
 
