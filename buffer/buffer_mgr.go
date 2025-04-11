@@ -52,17 +52,6 @@ func (bm *BufferMgr) Available() int {
 	return bm.numAvailable
 }
 
-func (bm *BufferMgr) FlushAll(txnum int) {
-	bm.mu.Lock()
-	defer bm.mu.Unlock()
-
-	for _, buff := range bm.bufferpool {
-		if buff.ModifiyingTx() == txnum {
-			buff.flush()
-		}
-	}
-}
-
 func (bm *BufferMgr) Unpin(buff *Buffer) {
 	bm.mu.Lock()
 	defer bm.mu.Unlock()
