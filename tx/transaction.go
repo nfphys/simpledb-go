@@ -77,14 +77,14 @@ func (tx *Transaction) SetInt(blk *file.BlockId, offset int, val int, okToLog bo
 	// TODO: implement recovery and concurrency control
 	buffer := tx.mybuffers.GetBuffer(blk)
 	buffer.Contents().SetInt(offset, val)
-	buffer.SetModified(tx.txnum, -1)
+	buffer.SetModified()
 }
 
 func (tx *Transaction) SetString(blk *file.BlockId, offset int, val string, okToLog bool) {
 	// TODO: implement recovery and concurrency control
 	buffer := tx.mybuffers.GetBuffer(blk)
 	buffer.Contents().SetString(offset, val)
-	buffer.SetModified(tx.txnum, -1)
+	buffer.SetModified()
 }
 
 func (tx *Transaction) AvailableBuffs() int {
