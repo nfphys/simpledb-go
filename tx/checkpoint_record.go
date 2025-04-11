@@ -1,11 +1,10 @@
-package recovery
+package tx
 
 import (
 	"fmt"
 
 	"github.com/nfphys/simpledb-go/file"
 	"github.com/nfphys/simpledb-go/log"
-	"github.com/nfphys/simpledb-go/tx"
 )
 
 type CheckpointRecord struct {
@@ -23,7 +22,7 @@ func (cr *CheckpointRecord) TxNumber() int {
 	return -1
 }
 
-func (cr *CheckpointRecord) Undo(tx *tx.Transaction) {
+func (cr *CheckpointRecord) Undo(tx *Transaction) {
 	// No undo operation for CHECKPOINT record
 }
 
