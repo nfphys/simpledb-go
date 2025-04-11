@@ -46,9 +46,9 @@ func (lm *LogMgr) Append(rec []byte) int {
 
 	boundary := lm.logpage.GetInt(0)
 	recsize := len(rec)
-	bytesneeded := recsize + 4
+	bytesneeded := recsize + file.INT_BYTES
 
-	if boundary - bytesneeded < 4 {
+	if boundary - bytesneeded < file.INT_BYTES {
 		lm.flush()
 		lm.currentblk = lm.fm.Append(lm.logfile)
 		lm.logpage.SetInt(0, lm.fm.BlockSize())
@@ -95,7 +95,7 @@ func (lm *LogMgr) Iterator() func(func([]byte) bool) {
 			}
 
 			rec := p.GetBytes(currentpos)
-			currentpos += len(rec) + 4
+			currentpos += len(rec) + file.INT_BYTES
 
 			if !yield(rec) {
 				return
