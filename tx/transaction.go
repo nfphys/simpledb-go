@@ -28,6 +28,8 @@ func NewTransaction(fm *file.FileMgr, lm *log.LogMgr, bm *buffer.BufferMgr) *Tra
 	txnum := nextTxNum
 	nextTxNum++
 
+	WriteStartRecordToLog(lm, txnum)
+
 	return &Transaction{
 		fm: fm,
 		lm: lm,
@@ -38,13 +40,33 @@ func NewTransaction(fm *file.FileMgr, lm *log.LogMgr, bm *buffer.BufferMgr) *Tra
 }
 
 func (tx *Transaction) Commit() {
-	// TODO: implement recovery and concurrency control
+	// TODO: implement concurrency control
+	tx.mybuffers.FlushAll()
+	lsn := WriteCommitRecordToLog(tx.lm, tx.txnum)
+	tx.lm.Flush(lsn)
 	tx.mybuffers.UnpinAll()
 }
 
 func (tx *Transaction) Rollback() {
-	// TODO: implement recovery and concurrency control
+	// TODO: implement concurrency control
+	tx.doRollback()
+	WriteRollbackRecordToLog(tx.lm, tx.txnum)
 	tx.mybuffers.UnpinAll()
+}
+
+func (tx *Transaction) doRollback() {
+	for bytes := range tx.lm.Iterator() {
+		rec := CreateLogRecord(bytes)
+		if rec.TxNumber() != tx.txnum {
+			continue
+		}
+
+		if rec.Op() == START {
+			break
+		}
+
+		rec.Undo(tx)
+	}
 }
 
 func (tx *Transaction) Pin(blk *file.BlockId) error {
@@ -70,12 +92,16 @@ func (tx *Transaction) GetString(blk *file.BlockId, offset int) string {
 }
 
 func (tx *Transaction) SetInt(blk *file.BlockId, offset int, val int) {
-	// TODO: implement recovery and concurrency control
+	// TODO: implement concurrency control
+	oldval := tx.GetInt(blk, offset)
+	WriteSetIntRecordToLog(tx.lm, tx.txnum, blk, offset, oldval)
 	tx.setIntWithoutLog(blk, offset, val)
 }
 
 func (tx *Transaction) SetString(blk *file.BlockId, offset int, val string) {
-	// TODO: implement recovery and concurrency control
+	// TODO: implement concurrency control
+	oldval := tx.GetString(blk, offset)
+	WriteSetStringRecordToLog(tx.lm, tx.txnum, blk, offset, oldval)
 	tx.setStringWithoutLog(blk, offset, val)
 }
 
